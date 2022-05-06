@@ -7,9 +7,9 @@ param(
 Add-Type -AssemblyName System.Web
 
 ## Constants of project
-[string]$githubProjectUrl = 'https://github.com/CompuMasterGmbH/CompuMaster.IO.Directory/' #must contain trailing slash!
+[string]$githubProjectUrl = 'https://github.com/CompuMasterGmbH/CompuMaster.IO.TemporaryFile/' #must contain trailing slash!
 [string]$masterBranchName = "master" #ususally 'master' or 'main'
-[string]$assemblyVersionSourceFilePath = ".\CompuMaster.IO.Directory\CompuMaster.IO.Directory.vbproj"
+[string]$assemblyVersionSourceFilePath = ".\CompuMaster.IO.TemporaryFile\CompuMaster.IO.TemporaryFile.vbproj"
 [string]$assemblyVersionSourceVersionPattern = '^.*\<Version\>(.*)\<\/Version\>.*$'
 
 ## Check for master branch
