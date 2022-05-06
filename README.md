@@ -12,6 +12,7 @@ When running applications, there is often a need to create temporary files and o
 ```C#
 using (var f = new CompuMaster.IO.TemporaryFile(".txt")) 
 {
+     System.IO.File.WriteAllBytes(f.FilePath, new Byte[] {});
      Console.WriteLine("some work");
 }
 // if file is not locked by another task: file is already removed
@@ -21,11 +22,13 @@ using (var f = new CompuMaster.IO.TemporaryFile(".txt"))
 
 ### VB.Net Sample
 
-```C#
-Using f As New CompuMaster.IO.TemporaryFile(".txt")) 
-{
-     Console.WriteLine("some work");
-}
+```VB.Net
+'
+Using f As New CompuMaster.IO.TemporaryFile(".txt"))
+     System.IO.File.WriteAllBytes(f.FilePath, New Byte() {})
+     Console.WriteLine("some more work")
+End Using
+
 'if file is not locked by another task: file is already removed
 'if file is locked by another task: file will be removed on final call (see usage pattern below)
 '    CompuMaster.IO.TemporaryFile.CleanupOnApplicationExit()
