@@ -12,7 +12,7 @@ When running applications, there is often a need to create temporary files and o
 ```C#
 using (var f = new CompuMaster.IO.TemporaryFile(".txt")) 
 {
-     System.IO.File.WriteAllBytes(f.FilePath, new Byte[] {});
+     System.IO.File.WriteAllBytes(f.FilePath, new Byte[] { });
      Console.WriteLine("some work");
 }
 // if file is not locked by another task: file is already removed
