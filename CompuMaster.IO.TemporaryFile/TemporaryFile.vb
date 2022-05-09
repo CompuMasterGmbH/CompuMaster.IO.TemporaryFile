@@ -117,13 +117,13 @@ Namespace CompuMaster.IO
         ''' An absolute file path to the temporary file
         ''' </summary>
         ''' <returns></returns>
-        Public ReadOnly Property FilePath As String
+        Public Overridable ReadOnly Property FilePath As String
 
         ''' <summary>
         ''' The applying cleanup trigger
         ''' </summary>
         ''' <returns></returns>
-        Public ReadOnly Property CleanupTrigger As TempFileCleanupEvent
+        Public Overridable ReadOnly Property CleanupTrigger As TempFileCleanupEvent
             Get
                 Return _CleanupTrigger
             End Get
@@ -184,19 +184,19 @@ Namespace CompuMaster.IO
         ''' Remove the temporary file from disk if it exists
         ''' </summary>
         ''' <remarks>For explicit method calls. If this method isn't called, there will be a cleanup on dispose. Exceptions will be thrown when trying to delete blocked files, read-only files, etc.</remarks>
-        Public Sub CleanUp()
+        Public Overridable Sub CleanUp()
             If System.IO.File.Exists(Me.FilePath) Then
                 System.IO.File.Delete(Me.FilePath)
                 If IsUnitTestMode Then System.Console.WriteLine("Manually deleted " & Me.FilePath)
             End If
-                Me._CleanupTrigger = TempFileCleanupEvent.None
+            Me._CleanupTrigger = TempFileCleanupEvent.None
         End Sub
 
         ''' <summary>
         ''' Remove the temporary file from disk if it exists
         ''' </summary>
         ''' <remarks>For explicit method calls. If this method isn't called, there will be a cleanup on dispose. Exceptions will be ignored when trying to delete blocked files, read-only files, etc.</remarks>
-        Public Sub TryCleanUp()
+        Public Overridable Sub TryCleanUp()
             Try
                 Me.CleanUp()
             Catch
@@ -250,18 +250,6 @@ Namespace CompuMaster.IO
 #End Region
 
 #Region "AppContext"
-        'Private Shared Sub RemoveFile(filePath As String)
-        '    Try
-        '        If System.IO.File.Exists(filePath) Then
-        '            System.IO.File.Delete(filePath)
-        '        End If
-        '    Catch ex As System.IO.IOException
-        '        'ignore all errors like "Der Prozess kann nicht auf die Datei "C:\Users\wezel\AppData\Local\Temp\1\20121120200830980378654776317.docx" zugreifen, da sie von einem anderen Prozess verwendet wird." e.g. when closing HLS while document is still open
-        '    Catch ex As Exception
-        '        'ignore all errors regarding temporary file cleanup
-        '    End Try
-        'End Sub
-
         Friend Shared ReadOnly FilesToRemoveOnAppExit As New List(Of String)
         Private Shared IsApplicationClosing As Boolean = False
 
