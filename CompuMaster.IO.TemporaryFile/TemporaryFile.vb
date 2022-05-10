@@ -212,7 +212,7 @@ Namespace CompuMaster.IO
         End Sub
 
 #Region "IDisposable Support"
-        Private disposedValue As Boolean ' So ermitteln Sie überflüssige Aufrufe
+        Private disposedValue As Boolean ' So ermitteln Sie Ã¼berflÃ¼ssige Aufrufe
 
         ' IDisposable
         Protected Overridable Sub Dispose(disposing As Boolean)
@@ -241,9 +241,9 @@ Namespace CompuMaster.IO
             Me.disposedValue = True
         End Sub
 
-        ' Dieser Code wird von Visual Basic hinzugefügt, um das Dispose-Muster richtig zu implementieren.
+        ' Dieser Code wird von Visual Basic hinzugefÃ¼gt, um das Dispose-Muster richtig zu implementieren.
         Public Sub Dispose() Implements IDisposable.Dispose
-            ' Ändern Sie diesen Code nicht. Fügen Sie oben in Dispose(ByVal disposing As Boolean) Bereinigungscode ein.
+            ' Ã„ndern Sie diesen Code nicht. FÃ¼gen Sie oben in Dispose(ByVal disposing As Boolean) Bereinigungscode ein.
             Dispose(True)
             GC.SuppressFinalize(Me)
         End Sub
@@ -266,6 +266,7 @@ Namespace CompuMaster.IO
         ''' <summary>
         ''' Run final cleanup on application exit and try to remove all remaining temporary files from disk
         ''' </summary>
+        ''' <remarks>All exceptions (e.g. from file system) are catched and ignored</remarks>
         Public Shared Sub CleanupOnApplicationExit()
             TryToRemoveAllDisposedButLockedTempFiles()
         End Sub
