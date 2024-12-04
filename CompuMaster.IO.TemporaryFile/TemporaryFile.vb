@@ -35,7 +35,6 @@ Namespace CompuMaster.IO
         ''' <summary>
         ''' Create a temporary file in a random sub directory of user's temp directory) with auto-removal on dispose
         ''' </summary>
-        ''' <param name="Purpose"></param>
         ''' <param name="fileNameWithoutExtension"></param>
         ''' <param name="extension"></param>
         Public Sub New(fileNameWithoutExtension As String, extension As String)
