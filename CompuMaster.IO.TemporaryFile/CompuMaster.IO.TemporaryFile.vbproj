@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace></RootNamespace>
     <TargetFrameworks>netstandard2.0;netcoreapp3.1;net6.0;net48</TargetFrameworks>
-    <Version>2024.11.04.100</Version>
+    <Version>2024.12.04.100</Version>
     <Authors>Jochen Wezel</Authors>
     <Company>CompuMaster GmbH</Company>
     <Copyright>2019-2024 CompuMaster GmbH</Copyright>
@@ -53,9 +53,10 @@
 	<OptionCompare>Binary</OptionCompare>
   </PropertyGroup>
   <PropertyGroup>
-	<OptionStrict>Off</OptionStrict>
+	<OptionStrict>On</OptionStrict>
 	<OutputType>Library</OutputType>
 	<StartupObject></StartupObject>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\logo_64x64.png">
