@@ -115,7 +115,20 @@ Namespace CompuMaster.Tests.IO
 
         <Test>
         Sub PathTooLongExceptionOnCreateFile()
-            Dim LongPath As String = "C:\" & New String("a"c, 300)
+            Dim RootDir As String
+
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+                    RootDir = "C:\"
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    RootDir = "/tmp/"
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
+            Dim LongPath As String = RootDir & New String("a"c, 300)
 #If NETFRAMEWORK Then
             LongPath &="-netframework"
 #Else
@@ -154,7 +167,20 @@ Namespace CompuMaster.Tests.IO
 
         <Test>
         Sub TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult()
-            Dim LongPath As String = "C:\" & New String("a"c, 300)
+            Dim RootDir As String
+
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+                    RootDir = "C:\"
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    RootDir = "/tmp/"
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
+            Dim LongPath As String = RootDir & New String("a"c, 300)
 #If NETFRAMEWORK Then
             LongPath &="-netframework"
 #Else
@@ -191,7 +217,20 @@ Namespace CompuMaster.Tests.IO
 
         <Test>
         Sub PathTooLongExceptionOnCreateFileInfo()
-            Dim LongPath As String = "C:\" & New String("a"c, 300)
+            Dim RootDir As String
+
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+                    RootDir = "C:\"
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    RootDir = "/tmp/"
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
+            Dim LongPath As String = RootDir & New String("a"c, 300)
 #If NETFRAMEWORK Then
             LongPath &="-netframework"
 #Else
@@ -204,32 +243,60 @@ Namespace CompuMaster.Tests.IO
             Catch E As Exception
                 Ex = E
             End Try
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
 #If NETFRAMEWORK Then
-            Assert.IsNotNull(Ex)
-            Assert.IsTrue(TypeOf Ex Is System.IO.PathTooLongException)
+                    Assert.IsNotNull(Ex)
+                    Assert.IsTrue(TypeOf Ex Is System.IO.PathTooLongException)
 #Else
-            Assert.IsFalse(TempFile.Exists)
+                    Assert.IsFalse(TempFile.Exists)
 #End If
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    Assert.IsFalse(TempFile.Exists)
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
         End Sub
 
         <Test>
         Sub IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi()
             Dim LongPath As String
+            Dim CharCount As Integer
+            Dim RootDir As String
 
-            LongPath = "C:\" & New String("a"c, 300) & ".txt"
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+                    RootDir = "C:\"
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    RootDir = "/tmp/"
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
 
-            LongPath = "C:\" & New String("a"c, 260)
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+            CharCount = 300
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
 
-            LongPath = "C:\" & New String("a"c, 256)
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+            CharCount = 260
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
 
-            LongPath = "C:\" & New String("a"c, 255)
-            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+            CharCount = 256
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
 
-            LongPath = "C:\" & New String("a"c, 250)
-            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+            CharCount = 255
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+
+            CharCount = 250
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
         End Sub
     End Class
 
