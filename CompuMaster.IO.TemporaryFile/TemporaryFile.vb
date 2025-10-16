@@ -1,4 +1,4 @@
-Option Explicit On
+﻿Option Explicit On
 Option Strict On
 
 Namespace CompuMaster.IO
@@ -91,7 +91,7 @@ Namespace CompuMaster.IO
             End If
             Me.FilePath = System.IO.Path.Combine(TempDir, fileNameWithoutExtension & extension)
             Me._CleanupTrigger = cleanupTrigger
-            If IsUnitTestMode Then System.Console.WriteLine("Reserved temp file location " & Me.FilePath)
+            If IsUnitTestMode Then WriteToLog("Reserved temp file location " & Me.FilePath)
         End Sub
 
         ''' <summary>
@@ -168,7 +168,7 @@ Namespace CompuMaster.IO
         ''' </summary>
         Friend Sub CreateFile()
             System.IO.File.WriteAllBytes(Me.FilePath, New Byte() {})
-            If IsUnitTestMode Then System.Console.WriteLine("Created 0-sized " & Me.FilePath)
+            If IsUnitTestMode Then WriteToLog("Created 0-sized " & Me.FilePath)
         End Sub
 
         ''' <summary>
@@ -186,7 +186,7 @@ Namespace CompuMaster.IO
         Public Overridable Sub CleanUp()
             If System.IO.File.Exists(Me.FilePath) Then
                 System.IO.File.Delete(Me.FilePath)
-                If IsUnitTestMode Then System.Console.WriteLine("Manually deleted " & Me.FilePath)
+                If IsUnitTestMode Then WriteToLog("Manually deleted " & Me.FilePath)
             End If
             Me._CleanupTrigger = TempFileCleanupEvent.None
         End Sub
@@ -205,7 +205,7 @@ Namespace CompuMaster.IO
         End Sub
 
         Protected Overrides Sub Finalize()
-            If IsUnitTestMode Then System.Console.WriteLine("Finalize " & Me.FilePath)
+            If IsUnitTestMode Then WriteToLog("Finalize " & Me.FilePath)
             Me.Dispose(True)
             MyBase.Finalize()
         End Sub
@@ -215,13 +215,13 @@ Namespace CompuMaster.IO
 
         ' IDisposable
         Protected Overridable Sub Dispose(disposing As Boolean)
-            If IsUnitTestMode Then System.Console.WriteLine("Disposing " & Me.FilePath)
+            If IsUnitTestMode Then WriteToLog("Disposing " & Me.FilePath)
             If Not Me.disposedValue Then
                 If disposing AndAlso (IsApplicationClosing OrElse Me.CleanupTrigger = TempFileCleanupEvent.OnDispose) Then
                     Try
                         If System.IO.File.Exists(Me.FilePath) Then
                             System.IO.File.Delete(Me.FilePath)
-                            If IsUnitTestMode Then System.Console.WriteLine("Dispose deleted " & Me.FilePath)
+                            If IsUnitTestMode Then WriteToLog("Dispose deleted " & Me.FilePath)
                         End If
                         Me._CleanupTrigger = TempFileCleanupEvent.None
                     Catch ex As System.IO.IOException
@@ -280,7 +280,7 @@ Namespace CompuMaster.IO
                 Try
                     If System.IO.File.Exists(f) Then
                         System.IO.File.Delete(f)
-                        If IsUnitTestMode Then System.Console.WriteLine("CleanupOnApplicationExit deleted " & f)
+                        If IsUnitTestMode Then WriteToLog("CleanupOnApplicationExit deleted " & f)
                     End If
                     FilesToRemoveOnAppExit.RemoveAt(MyCounter)
                 Catch
@@ -291,7 +291,145 @@ Namespace CompuMaster.IO
         End Sub
 
         Friend Shared IsUnitTestMode As Boolean
+
+        Private Shared Sub WriteToLog(data As String)
+            System.Console.WriteLine(data)
+        End Sub
 #End Region
+
+        ''' <summary>
+        ''' Get file information of the temporary file
+        ''' </summary>
+        ''' <returns></returns>
+        ''' <remarks>Throws an exception if the file does not exist</remarks>
+        Public Function GetFileInfo() As System.IO.FileInfo
+            Return New System.IO.FileInfo(Me.FilePath)
+        End Function
+
+        ''' <summary>
+        ''' Does the file exist?
+        ''' </summary>
+        ''' <returns></returns>
+        Public Function Exists() As Boolean
+            Return System.IO.File.Exists(Me.FilePath)
+        End Function
+
+        Public Structure TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
+            ''' <summary>
+            ''' The exception that was thrown when trying to access the given path, e.g. PathTooLongException, UnauthorizedAccessException, SecurityException, etc.
+            ''' </summary>
+            ''' <returns></returns>
+            Public Property FoundException As Exception
+            ''' <summary>
+            ''' The tested path is not too long for the current platform and a file could be created or opened for writing
+            ''' </summary>
+            ''' <returns></returns>
+            Public Property FileWritable As Boolean
+        End Structure
+
+        ''' <summary>
+        ''' Test if the given path would cause a PathTooLongException on the current platform, in fact opening or creating a file or directory at this path
+        ''' </summary>
+        ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
+        ''' <returns>True if a PathTooLongException would be thrown on the current platform when trying to access the given path</returns>
+        ''' <remarks>Relative paths are not supported for this test</remarks>
+        Public Function TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(allowTestToCreateDirectoryPathIfRequired As Boolean) As TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
+            Return TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(Me.FilePath, allowTestToCreateDirectoryPathIfRequired)
+        End Function
+
+        ''' <summary>
+        ''' Test if the given path would cause a PathTooLongException on the current platform, in fact opening or creating+deleting a file at this path
+        ''' </summary>
+        ''' <param name="path">An absolute path</param>
+        ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
+        ''' <returns>True if a PathTooLongException would be thrown on the current platform when trying to access the given path</returns>
+        ''' <remarks>Relative paths are not supported for this test</remarks>
+        Public Shared Function TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(path As String, allowTestToCreateDirectoryPathIfRequired As Boolean) As TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
+            If System.IO.Path.IsPathRooted(path) = False Then
+                'Relative paths are not supported for this test
+                Throw New ArgumentException("path must be an absolute path")
+            End If
+            Dim Result As New TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
+            Try
+                If System.IO.File.Exists(path) Then
+                    'File exists, try to open it
+                    Using f As System.IO.FileStream = System.IO.File.Open(path, System.IO.FileMode.Open, System.IO.FileAccess.Write, System.IO.FileShare.Read)
+                        'File could be opened -> no PathTooLongException
+                        Result.FileWritable = True
+                        f.Close()
+                    End Using
+                ElseIf System.IO.Directory.Exists(path) Then
+                    'Directory exists, try to get its info
+                    Dim di As New System.IO.DirectoryInfo(path)
+                    Dim TestFilePath = System.IO.Path.Combine(path, "~" & Guid.NewGuid.ToString("n") & ".tmp")
+                    'File/dir does not exist, try to create new file and delete it afterwards
+                    'NOTE: This test might fail due to other reasons like missing (write) permissions
+                    Using f As System.IO.FileStream = System.IO.File.Create(path)
+                        'File could be created -> no PathTooLongException
+                        Result.FileWritable = True
+                    End Using
+                    'Delete the created file again
+                    System.IO.File.Delete(path)
+                Else
+                    'Consider path as new file
+                    Dim fi As New System.IO.FileInfo(path) 'should not throw an exception
+                    Dim di As New System.IO.DirectoryInfo(System.IO.Path.GetDirectoryName(path)) 'should not throw an exception
+                    If di.Exists = False Then
+                        'Parent directory does not exist
+                        If allowTestToCreateDirectoryPathIfRequired Then
+                            'try to create it
+                            di.Create()
+                        Else
+                            Throw New System.IO.DirectoryNotFoundException("The directory path for the given file does not exist: " & di.FullName)
+                        End If
+                    End If
+
+                    'File/dir does not exist, try to create new file and delete it afterwards
+                    'NOTE: This test might fail due to other reasons like missing (write) permissions
+                    Using f As System.IO.FileStream = System.IO.File.Create(path)
+                        'File could be created -> no PathTooLongException
+                        f.Close()
+                        Result.FileWritable = True
+                    End Using
+                    'Delete the created file again
+                    System.IO.File.Delete(path)
+                End If
+            Catch ex As Exception
+                Result.FoundException = ex
+                Result.FileWritable = False
+            End Try
+            Return Result
+        End Function
+
+        ''' <summary>
+        ''' Test based on path length limits with rules for classic Windows API and NTFS file system
+        ''' </summary>
+        ''' <returns>True if the path has got issues which might conflict in Windows/NTFS environments, False if the path's length is safe to use</returns>
+        Public Function IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi() As Boolean
+            Return IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(Me.FilePath)
+        End Function
+
+        ''' <summary>
+        ''' Test based on path length limits with rules for classic Windows API and NTFS file system
+        ''' </summary>
+        ''' <param name="fullPath"></param>
+        ''' <returns>True if the path has got issues which might conflict in Windows/NTFS environments, False if the path's length is safe to use</returns>
+        Public Shared Function IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(fullPath As String) As Boolean
+            ' Klassische Windows-Grenzen (ohne aktivierte Long Paths):
+            Const MAX_PATH As Integer = 260        ' inkl. Terminator -> effektiv 259 Zeichen
+            Const MAX_COMPONENT As Integer = 255   ' typische NTFS-Grenze je Segment
+
+            Dim componentTooLong As Boolean = System.IO.Path.GetFileName(fullPath).Length > MAX_COMPONENT
+            For Each segment As String In fullPath.Split(New Char() {System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries)
+                If segment.Length > MAX_COMPONENT Then
+                    componentTooLong = True
+                    Exit For
+                End If
+            Next
+            Dim pathTooLong As Boolean = fullPath.Length >= (MAX_PATH)
+
+            Return componentTooLong OrElse pathTooLong
+        End Function
 
     End Class
 

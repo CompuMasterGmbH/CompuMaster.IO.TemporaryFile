@@ -1,4 +1,4 @@
-Option Explicit On
+﻿Option Explicit On
 Option Strict On
 
 Imports NUnit.Framework
@@ -113,6 +113,124 @@ Namespace CompuMaster.Tests.IO
             Assert.AreEqual(CompuMaster.IO.TemporaryFile.TempFileCleanupEvent.None, NewTempFile3.CleanupTrigger)
         End Sub
 
+        <Test>
+        Sub PathTooLongExceptionOnCreateFile()
+            Dim LongPath As String = "C:\" & New String("a"c, 300)
+#If NETFRAMEWORK Then
+            LongPath &="-netframework"
+#Else
+            LongPath &= "-net(core)"
+#End If
+            Dim TempFile As New CompuMaster.IO.TemporaryFile(LongPath, ".txt")
+            Dim Ex As Exception = Nothing
+            Try
+                TempFile.CreateFile()
+            Catch E As Exception
+                Ex = E
+            End Try
+
+            Try
+                Select Case System.Environment.OSVersion.Platform
+                    Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                        ' Windows (NT-based and older versions)
+#If NETFRAMEWORK Then
+                        Assert.IsNotNull(Ex)
+                        Assert.IsTrue(TypeOf Ex Is System.IO.PathTooLongException)
+#Else
+                        Assert.IsNotNull(Ex)
+                        Assert.IsTrue(TypeOf Ex Is System.IO.IOException)
+#End If
+                    Case PlatformID.Unix
+                        ' Unix-based systems (Linux, macOS, etc.)
+                        Assert.IsNull(Ex)
+                        Assert.IsTrue(TempFile.Exists)
+                    Case Else
+                        Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+                End Select
+            Finally
+                If TempFile IsNot Nothing Then TempFile.CleanUp()
+            End Try
+        End Sub
+
+        <Test>
+        Sub TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult()
+            Dim LongPath As String = "C:\" & New String("a"c, 300)
+#If NETFRAMEWORK Then
+            LongPath &="-netframework"
+#Else
+            LongPath &= "-net(core)"
+#End If
+            Dim TempFile As New CompuMaster.IO.TemporaryFile(LongPath, ".txt")
+            Dim TestResult As CompuMaster.IO.TemporaryFile.TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult = Nothing
+            TestResult = TempFile.TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(False)
+
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+#If NETFRAMEWORK Then
+                    Assert.IsNotNull(TestResult)
+                    Assert.IsNotNull(TestResult.FoundException)
+                    Assert.IsTrue(TypeOf TestResult.FoundException Is System.IO.PathTooLongException)
+#Else
+                    Assert.IsNotNull(TestResult)
+                    Assert.IsNotNull(TestResult.FoundException)
+                    Assert.IsTrue(TypeOf TestResult.FoundException Is System.IO.IOException)
+#End If
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    Assert.IsNotNull(TestResult)
+                    Assert.IsNull(TestResult.FoundException)
+                    Assert.IsTrue(TestResult.FileWritable)
+                    Assert.IsFalse(TempFile.Exists) 'Should be false, because file was created + deleted in the test method
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
+            If TempFile IsNot Nothing Then TempFile.CleanUp()
+        End Sub
+
+        <Test>
+        Sub PathTooLongExceptionOnCreateFileInfo()
+            Dim LongPath As String = "C:\" & New String("a"c, 300)
+#If NETFRAMEWORK Then
+            LongPath &="-netframework"
+#Else
+            LongPath &= "-net(core)"
+#End If
+            Dim Ex As Exception = Nothing
+            Dim TempFile As System.IO.FileInfo = Nothing
+            Try
+                TempFile = New System.IO.FileInfo(LongPath & ".txt")
+            Catch E As Exception
+                Ex = E
+            End Try
+#If NETFRAMEWORK Then
+            Assert.IsNotNull(Ex)
+            Assert.IsTrue(TypeOf Ex Is System.IO.PathTooLongException)
+#Else
+            Assert.IsFalse(TempFile.Exists)
+#End If
+        End Sub
+
+        <Test>
+        Sub IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi()
+            Dim LongPath As String
+
+            LongPath = "C:\" & New String("a"c, 300) & ".txt"
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+
+            LongPath = "C:\" & New String("a"c, 260)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+
+            LongPath = "C:\" & New String("a"c, 256)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+
+            LongPath = "C:\" & New String("a"c, 255)
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+
+            LongPath = "C:\" & New String("a"c, 250)
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath))
+        End Sub
     End Class
 
 End Namespace
