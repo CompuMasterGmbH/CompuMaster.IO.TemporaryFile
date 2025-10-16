@@ -281,24 +281,52 @@ Namespace CompuMaster.Tests.IO
 
             CharCount = 300
             LongPath = RootDir & New String("a"c, CharCount)
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in " & RootDir & " with " & CharCount & " chars")
 
             CharCount = 260
             LongPath = RootDir & New String("a"c, CharCount)
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in " & RootDir & " with " & CharCount & " chars")
 
             CharCount = 256
             LongPath = RootDir & New String("a"c, CharCount)
-            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in " & RootDir & " with " & CharCount & " chars")
 
             CharCount = 255
             LongPath = RootDir & New String("a"c, CharCount)
-            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in " & RootDir & " with " & CharCount & " chars")
 
             CharCount = 250
             LongPath = RootDir & New String("a"c, CharCount)
-            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in C:\ with " & CharCount & " chars")
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(LongPath), "Test against filename in " & RootDir & " with " & CharCount & " chars")
         End Sub
+
+        <Test>
+        Sub IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath()
+            Dim LongPath As String
+            Dim CharCount As Integer
+            Dim RootDir As String
+
+            Select Case System.Environment.OSVersion.Platform
+                Case PlatformID.Win32NT, PlatformID.Win32S, PlatformID.Win32Windows, PlatformID.WinCE
+                    ' Windows (NT-based and older versions)
+                    RootDir = System.IO.Path.GetTempPath()
+                Case PlatformID.Unix
+                    ' Unix-based systems (Linux, macOS, etc.)
+                    RootDir = "/tmp/"
+                Case Else
+                    Throw New NotImplementedException("Platform not covered in unit test: " & System.Environment.OSVersion.Platform.ToString)
+            End Select
+
+            CharCount = 150
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsTrue(CompuMaster.IO.TemporaryFile.IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath(LongPath, False), "Test against filename in " & RootDir & " with " & CharCount & " chars")
+
+            CharCount = 300
+            LongPath = RootDir & New String("a"c, CharCount)
+            Assert.IsFalse(CompuMaster.IO.TemporaryFile.IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath(LongPath, False), "Test against filename in " & RootDir & " with " & CharCount & " chars")
+
+        End Sub
+
     End Class
 
 End Namespace

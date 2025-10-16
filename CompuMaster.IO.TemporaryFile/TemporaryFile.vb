@@ -328,6 +328,78 @@ Namespace CompuMaster.IO
         End Structure
 
         ''' <summary>
+        ''' Check and test if the given path is valid, not too long for the current platform and a file could be created or opened for writing
+        ''' </summary>
+        ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
+        ''' <returns>True if the path is expected to not exceed critical platform/file system limits, False if it might be risky to use such path length or if requesting of write access fails</returns>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
+        Public Function IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath(allowTestToCreateDirectoryPathIfRequired As Boolean) As Boolean
+            Return IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath(Me.FilePath, allowTestToCreateDirectoryPathIfRequired)
+        End Function
+
+        ''' <summary>
+        ''' Check and test if the given path is valid, not too long for the current platform and a file could be created or opened for writing
+        ''' </summary>
+        ''' <param name="path">An absolute path</param>
+        ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
+        ''' <returns>True if the path is expected to not exceed critical platform/file system limits, False if it might be risky to use such path length or if requesting of write access fails</returns>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
+        Public Shared Function IsValidPathAndExpectedToBeNotTooLongAndTestedAsWritablePath(path As String, allowTestToCreateDirectoryPathIfRequired As Boolean) As Boolean
+            If IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(path) Then
+                'Path is too long for classic Windows API and NTFS file system
+                Return False
+            ElseIf TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(path, allowTestToCreateDirectoryPathIfRequired).FileWritable = False Then
+                'Path is not writable (e.g. PathTooLongException, UnauthorizedAccessException, SecurityException, etc.)
+                Return False
+            Else
+                'Path is valid and writable
+                Return True
+            End If
+        End Function
+
+        ''' <summary>
         ''' Test if the given path would cause a PathTooLongException on the current platform, in fact opening or creating a file or directory at this path
         ''' </summary>
         ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
