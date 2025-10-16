@@ -332,7 +332,28 @@ Namespace CompuMaster.IO
         ''' </summary>
         ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
         ''' <returns>True if a PathTooLongException would be thrown on the current platform when trying to access the given path</returns>
-        ''' <remarks>Relative paths are not supported for this test</remarks>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
         Public Function TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(allowTestToCreateDirectoryPathIfRequired As Boolean) As TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
             Return TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(Me.FilePath, allowTestToCreateDirectoryPathIfRequired)
         End Function
@@ -343,7 +364,28 @@ Namespace CompuMaster.IO
         ''' <param name="path">An absolute path</param>
         ''' <param name="allowTestToCreateDirectoryPathIfRequired">If the file doesn't exist and the directory path doesn't exist, the test might need the parent directory to create the test file. True to allow it (might lead to a left-over, empty parent directory, False to throw a System.IO.DirectoryNotFoundException</param>
         ''' <returns>True if a PathTooLongException would be thrown on the current platform when trying to access the given path</returns>
-        ''' <remarks>Relative paths are not supported for this test</remarks>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
         Public Shared Function TestForWritablePathAndPathTooLongExceptionOnCurrentPlatform(path As String, allowTestToCreateDirectoryPathIfRequired As Boolean) As TestForWritablePathAndPathTooLongExceptionOnCurrentPlatformResult
             If System.IO.Path.IsPathRooted(path) = False Then
                 'Relative paths are not supported for this test
@@ -405,6 +447,28 @@ Namespace CompuMaster.IO
         ''' Test based on path length limits with rules for classic Windows API and NTFS file system
         ''' </summary>
         ''' <returns>True if the path has got issues which might conflict in Windows/NTFS environments, False if the path's length is safe to use</returns>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
         Public Function IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi() As Boolean
             Return IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(Me.FilePath)
         End Function
@@ -414,6 +478,28 @@ Namespace CompuMaster.IO
         ''' </summary>
         ''' <param name="fullPath"></param>
         ''' <returns>True if the path has got issues which might conflict in Windows/NTFS environments, False if the path's length is safe to use</returns>
+        ''' <remarks>
+        ''' Relative paths are not supported for this test.
+        ''' 
+        ''' Windows classic API limits (without Long Paths enabled):
+        ''' - MAX_PATH = 260 characters (including terminator, so effectively 259 characters)
+        ''' - MAX_COMPONENT = 255 characters (typical NTFS limit per segment)
+        ''' 
+        ''' Note that Windows Subsystem for Linux (WSL) and some other file systems might have different limits.
+        ''' 
+        ''' Note on non-Windows platforms:
+        ''' This test is based on Windows/NTFS limits, too, because the .NET runtime might be running on a non-Windows platform (e.g. Linux, macOS) but the file system might be a network share or a mounted volume which is actually hosted on a Windows/NTFS system.
+        ''' 
+        ''' Note on Long Paths:
+        ''' Since Windows 10 v1607 and Windows Server 2016, Long Paths can be enabled by a manifest setting and/or a group policy setting.
+        ''' If Long Paths are enabled, the MAX_PATH limit of 260 characters does not apply anymore for applications which are manifested accordingly.
+        ''' However, the MAX_COMPONENT limit of 255 characters per segment still applies even if Long Paths are enabled.
+        ''' 
+        ''' Note on Unicode normalization:
+        ''' This test does not cover Unicode normalization issues which might lead to different path lengths depending on the normalization form used by different file systems.
+        ''' For example, a character like "é" can be represented as a single code point (U+00E9) or as a combination of "e" (U+0065) and an acute accent (U+0301).
+        ''' Different file systems might treat these representations differently, potentially leading to unexpected behavior when accessing files with such characters in their names.
+        ''' </remarks>
         Public Shared Function IsPathOrPathComponentTooLongForClassicWinApiAndNtfsApi(fullPath As String) As Boolean
             ' Klassische Windows-Grenzen (ohne aktivierte Long Paths):
             Const MAX_PATH As Integer = 260        ' inkl. Terminator -> effektiv 259 Zeichen
